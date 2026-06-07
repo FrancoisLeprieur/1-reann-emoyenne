@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moyennes UE - S1 & S2 | Tableau de Bord</title>
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --card: rgba(255, 255, 255, 0.9);
+            --text: #1e293b;
+            --muted: #64748b;
+            --accent: #4f46e5;
+            --accent-hover: #4338ca;
+            --success: #10b981;
+            --warning: #ef4444;
+            --border: #e2e8f0;
+            --shadow: 0 8px 30px rgba(0,0,0,0.06);
+            --radius: 16px;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+        body { background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%); color: var(--text); min-height: 100vh; padding: 24px 16px 40px; }
+        .header { text-align: center; margin-bottom: 32px; animation: fadeInDown 0.6s ease-out; }
+        .header h1 { font-size: 2rem; background: linear-gradient(to right, #4f46e5, #7c3aed); -webkit-background-clip: text; background-clip: text; color: transparent; margin-bottom: 8px; }
+        .header p { color: var(--muted); font-size: 0.95rem; }
+
+        .container { max-width: 1280px; margin: 0 auto; display: grid; gap: 24px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+        .card { background: var(--card); backdrop-filter: blur(12px); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); border: 1px solid rgba(255,255,255,0.6); animation: fadeInUp 0.7s ease-out; }
+        .card h2 { font-size: 1.25rem; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .card h2::before { content: ''; width: 4px; height: 20px; background: var(--accent); border-radius: 4px; }
+
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 8px; }
+        th { background: #f1f5f9; padding: 12px; text-align: left; font-weight: 600; color: var(--muted); font-size: 0.85rem; letter-spacing: 0.5px; }
+        td { padding: 10px 12px; border-top: 1px solid var(--border); transition: background 0.2s; }
+        tr:hover td { background: #f8fafc; }
+
+        input[type="number"] { width: 90px; padding: 8px 10px; border: 2px solid var(--border); border-radius: 10px; text-align: center; font-size: 0.95rem; font-weight: 500; transition: all 0.2s ease; background: white; }
+        input[type="number"]:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15); }
+        input.invalid { border-color: var(--warning); background: #fef2f2; color: var(--warning); animation: shake 0.3s; }
+
+        .global-section { grid-column: 1 / -1; animation: fadeInUp 0.8s ease-out; }
+        .results-table th, .results-table td { padding: 14px 16px; text-align: center; vertical-align: middle; }
+        .results-table th { background: #1e293b; color: #cbd5e1; font-weight: 500; }
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; transition: all 0.2s; }
+        .pass { background: #dcfce7; color: #166534; }
+        .fail { background: #fee2e2; color: #991b1b; }
+
+        .controls { grid-column: 1 / -1; display: flex; justify-content: center; gap: 12px; margin-top: 8px; }
+        .btn { padding: 10px 18px; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-reset { background: #fee2e2; color: #991b1b; }
+        .btn-reset:hover { background: #fecaca; transform: translateY(-1px); }
+        .btn-save { background: var(--accent); color: white; }
+        .btn-save:hover { background: var(--accent-hover); transform: translateY(-1px); }
+
+        .legend { text-align: center; margin-top: 24px; font-size: 0.85rem; color: var(--muted); display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 4px; vertical-align: middle; }
+        .dot-green { background: var(--success); }
+        .dot-red { background: var(--warning); }
+
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+
+        @media (max-width: 768px) {
+            .header h1 { font-size: 1.6rem; }
+            input[type="number"] { width: 100%; }
+            .results-table td:first-child { text-align: left !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>📘 Calculateur de Moyennes UE</h1>
+    <p>Suivi semestriel · S1 & S2 · Sauvegarde automatique</p>
+</div>
+
+<div class="container">
+    <div class="card" id="s1-section">
+        <h2>Semestre 1</h2>
+        <table id="t-s1"><thead><tr><th>Module (SAÉ & Ressources)</th><th>Note /20</th></tr></thead><tbody></tbody></table>
+    </div>
+
+    <div class="card" id="s2-section">
+        <h2>Semestre 2</h2>
+        <table id="t-s2"><thead><tr><th>Ressource / SAE</th><th>Note /20</th></tr></thead><tbody></tbody></table>
+    </div>
+
+    <div class="global-section card">
+        <h2>🎯 Moyennes par UE (S1 + S2)</h2>
+        <table class="results-table">
+            <thead><tr><th>UE</th><th>Moy. S1</th><th>Moy. S2</th><th>Moy. Globale Pondérée</th></tr></thead>
+            <tbody id="results-body"><tr><td colspan="4" style="text-align:center; opacity:0.6;">Saisis des notes pour initialiser le tableau...</td></tr></tbody>
+        </table>
+    </div>
+
+    <div class="controls">
+        <button class="btn btn-save" id="manualSave">💾 Sauvegarder maintenant</button>
+        <button class="btn btn-reset" id="resetBtn">🗑️ Tout effacer</button>
+    </div>
+</div>
+
+<div class="legend">
+    <span><span class="dot dot-green"></span> ≥ 10 (Validé)</span>
+    <span><span class="dot dot-red"></span> < 10 (À revoir)</span>
+    <span>🔄 Les notes sont sauvegardées automatiquement dans ton navigateur</span>
+</div>
+
+<script>
+    // 📊 DONNÉES OFFICIELLES (Coefficients exacts + SAE PORTFOLIO déplacée en S2 avec [2,2,2])
+    const DATA = {
+        s1: {
+            modules: ["SAÉ 1.01", "SAÉ 1.02", "SAÉ 1.03", "SAÉ 1.04", "SAÉ 1.05", "R1.01", "R1.02", "R1.03", "R1.04", "R1.05", "R1.06", "R1.07", "R1.08", "R1.09", "R1.10", "R1.11", "R1.12", "R1.13", "R1.14", "R1.15"],
+            coefs: [[10,0,0],[31,0,0],[0,36,0],[0,0,8],[0,0,35],[13,4,4],[12,0,0],[7,2,2],[8,8,0],[0,6,0],[5,0,5],[0,0,19],[6,0,6],[0,0,4],[5,5,5],[4,5,5],[2,2,2],[5,9,0],[5,9,0],[0,3,3]]
+        },
+        s2: {
+            modules: ["R201", "R202", "R203", "R204", "R205", "R206", "R207", "R208", "R209", "R210", "R211", "R212", "R213", "R214", "SAE 21", "SAE 22", "SAE 23", "SAE 24", "SAE 25", "SAE PORTFOLIO"],
+            coefs: [[15,5,5],[10,0,3],[13,0,0],[7,3,3],[5,10,0],[3,7,0],[1,0,7],[0,0,7],[3,0,8],[12,4,4],[6,4,4],[2,2,2],[3,3,6],[4,9,0],[20,0,0],[0,20,0],[0,0,25],[17,15,17],[2,2,2],[2,2,2]]
+        }
+    };
+
+    const UE_NAMES = ["UE1 - Administration (RT1)", "UE2 - Connectivité/Réseaux (RT2)", "UE3 - Programmation/Développement (RT3)"];
+    const STORAGE_KEY = 'grades_tracker_v3';
+
+    // 🔧 Génération des tableaux HTML
+    function renderTable(tableId, semData, semKey) {
+        const tbody = document.querySelector(`#${tableId} tbody`);
+        semData.modules.forEach((mod, i) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${mod}</td><td><input type="number" class="note-input" data-sem="${semKey}" data-idx="${i}" min="0" max="20" step="0.25" placeholder="-"></td>`;
+            tbody.appendChild(tr);
+        });
+    }
+    renderTable('t-s1', DATA.s1, 's1');
+    renderTable('t-s2', DATA.s2, 's2');
+
+    // 💾 Sauvegarde & Chargement LocalStorage
+    function saveNotes() {
+        const notes = {};
+        document.querySelectorAll('.note-input').forEach(inp => {
+            if (inp.value.trim() !== '') notes[inp.id] = inp.value;
+        });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+    }
+
+    function loadNotes() {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+        document.querySelectorAll('.note-input').forEach(inp => {
+            if (saved[inp.id] !== undefined) inp.value = saved[inp.id];
+        });
+    }
+
+    function resetAll(e) {
+        e.preventDefault();
+        if (!confirm('⚠️ Tu es sûr de vouloir tout effacer ? Cette action est irréversible.')) return;
+        localStorage.removeItem(STORAGE_KEY);
+        document.querySelectorAll('.note-input').forEach(inp => inp.value = '');
+        calculerMoyennes();
+    }
+
+    // 🧮 Calcul des moyennes (Corrigé & Optimisé)
+    function calculerMoyennes() {
+        let s1 = [[0,0],[0,0],[0,0]]; // [sommePondérée, sommeCoeff] par UE
+        let s2 = [[0,0],[0,0],[0,0]];
+
+        document.querySelectorAll('.note-input').forEach(inp => {
+            inp.classList.remove('invalid');
+            const sem = inp.dataset.sem;
+            const idx = parseInt(inp.dataset.idx, 10);
+            const note = parseFloat(inp.value);
+
+            if (isNaN(idx) || isNaN(note) || note < 0 || note > 20) {
+                if(inp.value.trim() !== '') inp.classList.add('invalid');
+                return;
+            }
+
+            const coefs = DATA[sem].coefs[idx];
+            let target = sem === 's1' ? s1 : s2;
+            
+            for(let ue=0; ue<3; ue++) {
+                target[ue][0] += note * coefs[ue];
+                target[ue][1] += coefs[ue];
+            }
+        });
+
+        // Moyennes globales = somme S1 + S2
+        let global = [[0,0],[0,0],[0,0]];
+        for(let ue=0; ue<3; ue++) {
+            global[ue][0] = s1[ue][0] + s2[ue][0];
+            global[ue][1] = s1[ue][1] + s2[ue][1];
+        }
+
+        // Mise à jour de l'affichage
+        const tbody = document.getElementById('results-body');
+        tbody.innerHTML = '';
+
+        for(let ue=0; ue<3; ue++) {
+            const mS1 = s1[ue][1] > 0 ? (s1[ue][0]/s1[ue][1]).toFixed(2) : '-';
+            const mS2 = s2[ue][1] > 0 ? (s2[ue][0]/s2[ue][1]).toFixed(2) : '-';
+            const mG = global[ue][1] > 0 ? (global[ue][0]/global[ue][1]).toFixed(2) : '-';
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="text-align:left; color:#334155; font-weight:600;">${UE_NAMES[ue]}</td>
+                <td><span class="${parseFloat(mS1)>=10?'pass':'fail'} badge">${mS1}</span></td>
+                <td><span class="${parseFloat(mS2)>=10?'pass':'fail'} badge">${mS2}</span></td>
+                <td style="font-size:1.15rem; font-weight:700; color:${parseFloat(mG)>=10?'#166534':'#991b1b'};">${mG}</td>
+            `;
+            tbody.appendChild(tr);
+        }
+    }
+
+    // ⚡ Initialisation
+    document.querySelectorAll('.note-input').forEach(inp => {
+        inp.id = `note-${inp.dataset.sem}-${inp.dataset.idx}`;
+        inp.addEventListener('input', () => { saveNotes(); calculerMoyennes(); });
+    });
+    document.getElementById('manualSave').addEventListener('click', saveNotes);
+    document.getElementById('resetBtn').addEventListener('click', resetAll);
+    window.addEventListener('DOMContentLoaded', () => { loadNotes(); calculerMoyennes(); });
+</script>
+
+</body>
+</html>
